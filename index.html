@@ -1,17 +1,23 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Player de Torrent</title>
+    <title>MOffPlayer</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/webtorrent@latest/webtorrent.min.js"></script>
 </head>
 <body>
-    <div id="player-container">
-        <video id="player" controls></video>
-        <button onclick="loadSampleTorrent()">Carregar Torrent Exemplo</button>
-    </div>
-    <script src="https://player.filmes.net.eu.org/script.js"></script>
+    <h1>MOffPlayer - Player de Torrent</h1>
+
+    <!-- Campo de entrada para o magnet link -->
+    <input type="text" id="magnetInput" placeholder="Insira o magnet link aqui">
+    <button id="playButton">Reproduzir</button>
+
+    <!-- Elemento de vídeo para reprodução -->
+    <video id="videoPlayer" controls></video>
+
+    <!-- Script JS -->
+    <script src="script.js"></script>
 </body>
 </html>
