@@ -2,6 +2,11 @@
 
 MOffPlayer é um player de vídeo para streaming de torrents, construído com WebTorrent. Este projeto permite a reprodução de arquivos de vídeo diretamente de torrents sem precisar baixá-los por completo.
 
+## Tecnologias
+
+- HTML, CSS, JavaScript
+- WebTorrent
+
 ## Funcionalidades
 
 - Reproduz vídeos diretamente de um torrent
