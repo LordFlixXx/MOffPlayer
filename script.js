@@ -16,15 +16,23 @@ playButton.addEventListener('click', () => {
         return;
     }
 
+    // Limpa o vídeo anterior, caso exista
+    videoPlayer.src = '';
+    videoPlayer.poster = ''; // Remove qualquer imagem de poster
+
     // Adiciona o torrent ao cliente WebTorrent
     client.add(magnetLink, (torrent) => {
-        // Obtém o primeiro arquivo de vídeo no torrent
-        const file = torrent.files.find(file => file.name.endsWith('.mp4'));
+        // Verifica se o torrent contém arquivos de vídeo
+        const file = torrent.files.find(file => file.name.endsWith('.mp4') || file.name.endsWith('.webm') || file.name.endsWith('.mkv'));
 
-        // Stream do arquivo para o elemento de vídeo
-        file.renderTo(videoPlayer, {
-            autoplay: true,
-            controls: true
-        });
+        if (file) {
+            // Stream do arquivo para o elemento de vídeo
+            file.renderTo(videoPlayer, {
+                autoplay: true,
+                controls: true
+            });
+        } else {
+            alert('Nenhum arquivo de vídeo encontrado no torrent.');
+        }
     });
 });
