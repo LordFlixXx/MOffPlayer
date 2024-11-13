@@ -1,160 +1,170 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8">
-    <title>WebTorrent video player</title>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MakingOff Torrent Player</title>
     <style>
-      #output video {
-        width: 100%;
-      }
-      #progressBar {
-          height: 5px;
-          width: 0%;
-          background-color: #35b44f;
-          transition: width .4s ease-in-out;
-      }
-      body.is-seed .show-seed {
-          display: inline;
-      }
-      body.is-seed .show-leech {
-          display: none;
-      }
-      .show-seed {
-          display: none;
-      }
-      #status code {
-          font-size: 90%;
-          font-weight: 700;
-          margin-left: 3px;
-          margin-right: 3px;
-          border-bottom: 1px dashed rgba(255,255,255,0.3);
-      }
+        html, body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            height: 100%;
+        }
+        
+        #player {
+            height: 100vh;
+            width: 100%;
+        }
+        
+        #iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        #imagem-topo {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            transition: opacity 1s ease-out;
+        }
 
-      .is-seed #hero {
-          background-color: #154820;
-          transition: .5s .5s background-color ease-in-out;
-      }
-      #hero {
-          background-color: #2a3749;
-      }
-      #status {
-          color: #fff;
-          font-size: 17px;
-          padding: 5px;
-      }
-      a:link, a:visited {
-          color: #30a247;
-          text-decoration: none;
-      }
+        @media (max-width: 600px) {
+            #imagem-topo {
+                top: 5px;
+                right: 5px;
+            }
+        }
     </style>
-  </head>
-  <body>
-    <div id="hero">
-      <div id="output">
-        <div id="progressBar"></div>
-        <!-- The video player will be added here -->
-      </div>
-      <!-- Statistics -->
-      <div id="status">
-        <div>
-          <span class="show-leech">Downloading </span>
-          <span class="show-seed">Seeding </span>
-          <code>
-            <!-- Informative link to the torrent file -->
-            <a id="torrentLink" href="https://webtorrent.io/torrents/sintel.torrent">sintel.torrent</a>
-          </code>
-          <span class="show-leech"> from </span>
-          <span class="show-seed"> to </span>
-          <code id="numPeers">0 peers</code>.
-        </div>
-        <div>
-          <code id="downloaded"></code>
-          of <code id="total"></code>
-          — <span id="remaining"></span><br/>
-          &#x2198;<code id="downloadSpeed">0 b/s</code>
-          / &#x2197;<code id="uploadSpeed">0 b/s</code>
-        </div>
-      </div>
-    </div>
-    <!-- Include the latest version of WebTorrent -->
-    <script src="https://cdn.jsdelivr.net/npm/webtorrent@latest/webtorrent.min.js"></script>
+</head>
+<body>
+    <div id="player"></div>
+    <a id="imagem-topo-link" href="https://makingoff.eu.org/">
+        <img id="imagem-topo" src="https://i.imgur.com/1inVaQD.png" alt="MakingOff Filmes">
+    </a>
 
-    <!-- Moment is used to show a human-readable remaining time -->
-    <script src="http://momentjs.com/downloads/moment.min.js"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/@webtor/embed-sdk-js/dist/index.min.js" charset="utf-8"></script>
     <script>
-      const torrentId = 'https://webtorrent.io/torrents/sintel.torrent'
-
-      const client = new WebTorrent()
-
-      // HTML elements
-      const $body = document.body
-      const $progressBar = document.querySelector('#progressBar')
-      const $numPeers = document.querySelector('#numPeers')
-      const $downloaded = document.querySelector('#downloaded')
-      const $total = document.querySelector('#total')
-      const $remaining = document.querySelector('#remaining')
-      const $uploadSpeed = document.querySelector('#uploadSpeed')
-      const $downloadSpeed = document.querySelector('#downloadSpeed')
-
-      // Download the torrent
-      client.add(torrentId, function (torrent) {
-
-        // Torrents can contain many files. Let's use the .mp4 file
-        const file = torrent.files.find(function (file) {
-          return file.name.endsWith('.mp4')
-        })
-
-        // Stream the file in the browser
-        file.appendTo('#output')
-
-        // Trigger statistics refresh
-        torrent.on('done', onDone)
-        setInterval(onProgress, 500)
-        onProgress()
-
-        // Statistics
-        function onProgress () {
-          // Peers
-          $numPeers.innerHTML = torrent.numPeers + (torrent.numPeers === 1 ? ' peer' : ' peers')
-
-          // Progress
-          const percent = Math.round(torrent.progress * 100 * 100) / 100
-          $progressBar.style.width = percent + '%'
-          $downloaded.innerHTML = prettyBytes(torrent.downloaded)
-          $total.innerHTML = prettyBytes(torrent.length)
-
-          // Remaining time
-          let remaining
-          if (torrent.done) {
-            remaining = 'Done.'
-          } else {
-            remaining = moment.duration(torrent.timeRemaining / 1000, 'seconds').humanize()
-            remaining = remaining[0].toUpperCase() + remaining.substring(1) + ' remaining.'
-          }
-          $remaining.innerHTML = remaining
-
-          // Speed rates
-          $downloadSpeed.innerHTML = prettyBytes(torrent.downloadSpeed) + '/s'
-          $uploadSpeed.innerHTML = prettyBytes(torrent.uploadSpeed) + '/s'
+        function getQueryStringParameter(name) {
+            const params = new URLSearchParams(window.location.search);
+            return params.get(name);
         }
-        function onDone () {
-          $body.className += ' is-seed'
-          onProgress()
-        }
-      })
 
-      // Human readable bytes util
-      function prettyBytes(num) {
-        const units = ['B', 'kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
-        const neg = num < 0
-        if (neg) num = -num
-        if (num < 1) return (neg ? '-' : '') + num + ' B'
-        const exponent = Math.min(Math.floor(Math.log(num) / Math.log(1000)), units.length - 1)
-        const unit = units[exponent]
-        num = Number((num / Math.pow(1000, exponent)).toFixed(2))
-        return (neg ? '-' : '') + num + ' ' + unit
-      }
+        const movieId = getQueryStringParameter('id');
+        const imdbId = getQueryStringParameter('imdb_id');
+        const defaultPoster = 'https://i.imgur.com/IG0AIMf.jpeg';
+
+        if (!movieId) {
+            console.error('ID do filme não encontrado na URL');
+        } else {
+            let posterUrl = defaultPoster;
+
+            if (imdbId) {
+                fetch(`https://yts.mx/api/v2/movie_details.json?imdb_id=${imdbId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        posterUrl = data.data.movie.background_image || defaultPoster;
+
+                        initializePlayer(movieId, posterUrl);
+                    })
+                    .catch(error => {
+                        console.error('Erro ao buscar imagem de fundo:', error);
+                        initializePlayer(movieId, posterUrl);
+                    });
+            } else {
+                initializePlayer(movieId, posterUrl);
+            }
+        }
+
+        function initializePlayer(movieId, posterUrl) {
+            const movies = [
+                {
+                    id: movieId,
+                    magnet: `magnet:?xt=urn:btih:${movieId}&dn=${movieId}&tr=`,
+                    poster: posterUrl
+                }
+            ];
+
+            window.webtor = window.webtor || [];
+            window.webtor.push({
+                id: 'player',
+                magnet: movies[0].magnet,
+                poster: movies[0].poster,
+                width: '100%',
+                height: '100%',
+                features: {
+                    autoSubtitles: true,
+                    continue: true,
+                    title: false,
+                    p2pProgress: true,
+                    subtitles: true,
+                    settings: false,
+                    embed: false,
+                    browse: false,
+                    download: false,
+                    fullscreen: true,
+                    playpause: true,
+                    currentTime: true,
+                    timeline: true,
+                    duration: true,
+                    volume: true,
+                    chromecast: true,
+                },
+                on: function(e) {
+                    if (e.name == window.webtor.TORRENT_FETCHED) {
+                        console.log('Torrent fetched!', e.data);
+                    }
+                    if (e.name == window.webtor.TORRENT_ERROR) {
+                        console.log('Torrent error!');
+                    }
+                },
+            });
+        }
+
+        function hideImage() {
+            var img = document.getElementById('imagem-topo');
+            img.style.opacity = '0';
+            setTimeout(function() {
+                img.style.display = 'none';
+            }, 1000);
+        }
+
+        function showImage() {
+            var img = document.getElementById('imagem-topo');
+            img.style.display = 'block';
+            setTimeout(function() {
+                img.style.opacity = '1';
+            }, 10);
+
+            clearTimeout(hideImageTimeout);
+            hideImageTimeout = setTimeout(hideImage, 5000);
+        }
+
+        var hideImageTimeout;
+        document.addEventListener('mousemove', function() {
+            showImage();
+        });
     </script>
-  </body>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var iframe = document.getElementById('myIframe');
+
+            iframe.requestFullscreen().catch(err => {
+                console.log(`Erro ao tentar entrar em tela cheia: ${err.message}`);
+            });
+
+            document.addEventListener('fullscreenchange', (event) => {
+                if (!document.fullscreenElement) {
+                    iframe.requestFullscreen().catch(err => {
+                        console.log(`Erro ao tentar entrar em tela cheia novamente: ${err.message}`);
+                    });
+                }
+            });
+        });
+    </script>
+</body>
 </html>
